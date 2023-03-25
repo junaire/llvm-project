@@ -12,6 +12,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "clang/Interpreter/Value.h"
+#include "InterpreterUtils.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Type.h"
 #include "clang/Interpreter/Interpreter.h"
@@ -23,6 +24,7 @@
 #include <utility>
 
 using namespace clang;
+using namespace clang::caas;
 
 namespace {
 
@@ -230,6 +232,11 @@ void *Value::getPtr() const {
   return Data.m_Ptr;
 }
 
+void **Value::getPtrAddress() const {
+  assert(ValueKind == K_PtrOrObj);
+  return &const_cast<Value *>(this)->Data.m_Ptr;
+}
+
 QualType Value::getType() const {
   return QualType::getFromOpaquePtr(OpaqueType);
 }
@@ -255,12 +262,29 @@ const ASTContext &Value::getASTContext() const {
 void Value::dump() const { print(llvm::outs()); }
 
 void Value::printType(llvm::raw_ostream &Out) const {
-  Out << "Not implement yet.\n";
+  Out << ReplPrintTypeImpl(*this);
 }
+
 void Value::printData(llvm::raw_ostream &Out) const {
-  Out << "Not implement yet.\n";
+  Out << ReplPrintDataImpl(*this);
 }
+
 void Value::print(llvm::raw_ostream &Out) const {
   assert(OpaqueType != nullptr && "Can't print default Value");
-  Out << "Not implement yet.\n";
+
+  // Don't even try to print a void or an invalid type, it doesn't make sense.
+  if (getType()->isVoidType() || !isValid())
+    return;
+
+  // We need to get all the results together then print it, since `printType` is
+  // much faster than `printData`.
+  std::string Str;
+  llvm::raw_string_ostream SS(Str);
+
+  SS << "(";
+  printType(SS);
+  SS << ") ";
+  printData(SS);
+  SS << "\n";
+  Out << Str;
 }

@@ -49,8 +49,10 @@ class raw_ostream;
 namespace clang {
 
 class ASTContext;
-class Interpreter;
 class QualType;
+
+namespace caas {
+class Interpreter;
 
 #if __has_attribute(visibility) &&                                             \
     (!(defined(_WIN32) || defined(__CYGWIN__)) ||                              \
@@ -131,6 +133,7 @@ public:
   void setOpaqueType(void *Ty) { OpaqueType = Ty; }
 
   void *getPtr() const;
+  void **getPtrAddress() const;
   void setPtr(void *Ptr) { Data.m_Ptr = Ptr; }
 
 #define X(type, name)                                                          \
@@ -197,6 +200,6 @@ template <> inline void *Value::as() const {
     return Data.m_Ptr;
   return (void *)as<uintptr_t>();
 }
-
+} // namespace caas
 } // namespace clang
 #endif

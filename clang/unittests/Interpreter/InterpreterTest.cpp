@@ -29,6 +29,7 @@
 #include "gtest/gtest.h"
 
 using namespace clang;
+using namespace caas;
 
 #if defined(_AIX)
 #define CLANG_INTERPRETER_NO_SUPPORT_EXEC
@@ -46,10 +47,11 @@ createInterpreter(const Args &ExtraArgs = {},
                   DiagnosticConsumer *Client = nullptr) {
   Args ClangArgs = {"-Xclang", "-emit-llvm-only"};
   ClangArgs.insert(ClangArgs.end(), ExtraArgs.begin(), ExtraArgs.end());
-  auto CI = cantFail(clang::IncrementalCompilerBuilder::create(ClangArgs));
+  auto CI =
+      cantFail(clang::caas::IncrementalCompilerBuilder::create(ClangArgs));
   if (Client)
     CI->getDiagnostics().setClient(Client, /*ShouldOwnClient=*/false);
-  return cantFail(clang::Interpreter::create(std::move(CI)));
+  return cantFail(clang::caas::Interpreter::create(std::move(CI)));
 }
 
 static size_t DeclsSize(TranslationUnitDecl *PTUDecl) {

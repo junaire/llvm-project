@@ -28,7 +28,7 @@
 
 #include <sstream>
 
-namespace clang {
+namespace clang::caas {
 
 class IncrementalASTConsumer final : public ASTConsumer {
   Interpreter &Interp;
@@ -383,4 +383,4 @@ llvm::StringRef IncrementalParser::GetMangledName(GlobalDecl GD) const {
   return CG->GetMangledName(GD);
 }
 
-} // end namespace clang
+} // namespace clang::caas

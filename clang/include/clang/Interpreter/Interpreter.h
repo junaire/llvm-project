@@ -35,7 +35,10 @@ class ThreadSafeContext;
 
 namespace clang {
 
+class Parser;
 class CompilerInstance;
+
+namespace caas {
 class IncrementalExecutor;
 class IncrementalParser;
 
@@ -72,9 +75,12 @@ public:
   llvm::Expected<llvm::orc::LLJIT &> getExecutionEngine();
 
   llvm::Expected<PartialTranslationUnit &> Parse(llvm::StringRef Code);
+  llvm::Error ExecuteModule(std::unique_ptr<llvm::Module> &M);
   llvm::Error Execute(PartialTranslationUnit &T);
   llvm::Error ParseAndExecute(llvm::StringRef Code, Value *V = nullptr);
   llvm::Expected<llvm::orc::ExecutorAddr> CompileDtorCall(CXXRecordDecl *CXXRD);
+  llvm::Expected<llvm::orc::ExecutorAddr> CompileDecl(Decl *D);
+  std::string CreateUniqName(std::string Base);
 
   /// Undo N previous incremental inputs.
   llvm::Error Undo(unsigned N = 1);
@@ -96,6 +102,8 @@ public:
   llvm::Expected<llvm::orc::ExecutorAddr>
   getSymbolAddressFromLinkerName(llvm::StringRef LinkerName) const;
 
+  Parser &getParser() const;
+
   enum InterfaceKind { NoAlloc, WithAlloc, CopyArray };
 
   const llvm::SmallVectorImpl<Expr *> &getValuePrintingInfo() const {
@@ -110,9 +118,11 @@ private:
   bool FindRuntimeInterface();
 
   llvm::DenseMap<CXXRecordDecl *, llvm::orc::ExecutorAddr> Dtors;
+  std::unique_ptr<llvm::Module> GenModule();
 
   llvm::SmallVector<Expr *, 3> ValuePrintingInfo;
 };
+} // namespace caas
 } // namespace clang
 
 #endif // LLVM_CLANG_INTERPRETER_INTERPRETER_H

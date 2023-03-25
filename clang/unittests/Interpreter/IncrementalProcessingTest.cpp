@@ -27,6 +27,7 @@
 
 using namespace llvm;
 using namespace clang;
+using namespace clang::caas;
 
 namespace {
 
@@ -55,7 +56,7 @@ TEST(IncrementalProcessing, EmitCXXGlobalInitFunc) {
   auto CI = llvm::cantFail(IncrementalCompilerBuilder::create(ClangArgv));
   auto Interp = llvm::cantFail(Interpreter::create(std::move(CI)));
 
-  std::array<clang::PartialTranslationUnit *, 2> PTUs;
+  std::array<clang::caas::PartialTranslationUnit *, 2> PTUs;
 
   PTUs[0] = &llvm::cantFail(Interp->Parse(TestProgram1));
   ASSERT_TRUE(PTUs[0]->TheModule);

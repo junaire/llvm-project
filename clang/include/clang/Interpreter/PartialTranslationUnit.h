@@ -24,6 +24,7 @@ namespace clang {
 
 class TranslationUnitDecl;
 
+namespace caas {
 /// The class keeps track of various objects created as part of processing
 /// incremental inputs.
 struct PartialTranslationUnit {
@@ -32,6 +33,7 @@ struct PartialTranslationUnit {
   /// The llvm IR produced for the input.
   std::unique_ptr<llvm::Module> TheModule;
 };
+} // namespace caas
 } // namespace clang
 
 #endif // LLVM_CLANG_INTERPRETER_PARTIALTRANSLATIONUNIT_H

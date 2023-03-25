@@ -30,6 +30,7 @@
 #include "gtest/gtest.h"
 
 using namespace clang;
+using namespace clang::caas;
 
 namespace {
 using Args = std::vector<const char *>;
@@ -38,10 +39,11 @@ createInterpreter(const Args &ExtraArgs = {},
                   DiagnosticConsumer *Client = nullptr) {
   Args ClangArgs = {"-Xclang", "-emit-llvm-only"};
   ClangArgs.insert(ClangArgs.end(), ExtraArgs.begin(), ExtraArgs.end());
-  auto CI = cantFail(clang::IncrementalCompilerBuilder::create(ClangArgs));
+  auto CI =
+      cantFail(clang::caas::IncrementalCompilerBuilder::create(ClangArgs));
   if (Client)
     CI->getDiagnostics().setClient(Client, /*ShouldOwnClient=*/false);
-  return cantFail(clang::Interpreter::create(std::move(CI)));
+  return cantFail(clang::caas::Interpreter::create(std::move(CI)));
 }
 
 TEST(InterpreterTest, CatchException) {

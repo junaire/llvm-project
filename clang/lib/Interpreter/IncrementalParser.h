@@ -29,9 +29,11 @@ class LLVMContext;
 namespace clang {
 class ASTConsumer;
 class CompilerInstance;
+class Parser;
+
+namespace caas {
 class IncrementalAction;
 class Interpreter;
-class Parser;
 /// Provides support for incremental compilation. Keeps track of the state
 /// changes between the subsequent incremental input.
 ///
@@ -76,11 +78,14 @@ public:
 
   std::list<PartialTranslationUnit> &getPTUs() { return PTUs; }
 
+  Parser &getParser() { return *P; }
+
   std::unique_ptr<llvm::Module> GenModule();
 
 private:
   llvm::Expected<PartialTranslationUnit &> ParseOrWrapTopLevelDecl();
 };
+} // namespace caas
 } // end namespace clang
 
 #endif // LLVM_CLANG_LIB_INTERPRETER_INCREMENTALPARSER_H

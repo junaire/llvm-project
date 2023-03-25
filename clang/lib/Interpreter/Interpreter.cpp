@@ -33,6 +33,7 @@
 #include "clang/Frontend/TextDiagnosticBuffer.h"
 #include "clang/Interpreter/Value.h"
 #include "clang/Lex/PreprocessorOptions.h"
+#include "clang/Parse/Parser.h"
 #include "clang/Sema/Lookup.h"
 #include "llvm/ExecutionEngine/JITSymbol.h"
 #include "llvm/ExecutionEngine/Orc/LLJIT.h"
@@ -42,7 +43,7 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/TargetParser/Host.h"
 using namespace clang;
-
+using namespace clang::caas;
 // FIXME: Figure out how to unify with namespace init_convenience from
 //        tools/clang-import-test/clang-import-test.cpp
 namespace {
@@ -218,6 +219,7 @@ const char *const Runtimes = R"(
     void __clang_Interpreter_SetValueCopyArr(const T (*Src)[N], void* Placement, unsigned long Size) {
       __clang_Interpreter_SetValueCopyArr(Src[0], Placement, Size);
     }
+    #define __CLANG_REPL__ 1
 )";
 
 llvm::Expected<std::unique_ptr<Interpreter>>
@@ -242,6 +244,8 @@ Interpreter::create(std::unique_ptr<CompilerInstance> CI) {
 const CompilerInstance *Interpreter::getCompilerInstance() const {
   return IncrParser->getCI();
 }
+
+Parser &Interpreter::getParser() const { return IncrParser->getParser(); }
 
 llvm::Expected<llvm::orc::LLJIT &> Interpreter::getExecutionEngine() {
   if (!IncrExecutor) {
@@ -284,6 +288,22 @@ llvm::Error Interpreter::CreateExecutor() {
     IncrExecutor = std::move(Executor);
 
   return Err;
+}
+
+llvm::Error Interpreter::ExecuteModule(std::unique_ptr<llvm::Module> &M) {
+  if (!IncrExecutor) {
+    auto Err = CreateExecutor();
+    if (Err)
+      return Err;
+  }
+  // FIXME: Add a callback to retain the llvm::Module once the JIT is done.
+  if (auto Err = IncrExecutor->addModule(M))
+    return Err;
+
+  if (auto Err = IncrExecutor->runCtors())
+    return Err;
+
+  return llvm::Error::success();
 }
 
 llvm::Error Interpreter::Execute(PartialTranslationUnit &T) {
@@ -409,6 +429,37 @@ Interpreter::CompileDtorCall(CXXRecordDecl *CXXRD) {
   return AddrOrErr;
 }
 
+std::unique_ptr<llvm::Module> Interpreter::GenModule() {
+  return IncrParser->GenModule();
+}
+
+llvm::Expected<llvm::orc::ExecutorAddr> Interpreter::CompileDecl(Decl *D) {
+  assert(D && "The Decl being compiled can't be null");
+
+  ASTConsumer &Consumer = getCompilerInstance()->getASTConsumer();
+  Consumer.HandleTopLevelDecl(DeclGroupRef(D));
+  getCompilerInstance()->getSema().PerformPendingInstantiations();
+  Consumer.HandleTranslationUnit(getASTContext());
+
+  if (std::unique_ptr<llvm::Module> M = GenModule()) {
+    if (llvm::Error Err = ExecuteModule(M))
+      return Err;
+    ASTNameGenerator ASTNameGen(getASTContext());
+    llvm::Expected<llvm::orc::ExecutorAddr> AddrOrErr =
+        getSymbolAddressFromLinkerName(ASTNameGen.getName(D));
+
+    return AddrOrErr;
+  }
+  return llvm::orc::ExecutorAddr{};
+}
+
+std::string Interpreter::CreateUniqName(std::string Base) {
+  static size_t I = 0;
+  Base += std::to_string(I);
+  I += 1;
+  return Base;
+}
+
 static constexpr llvm::StringRef MagicRuntimeInterface[] = {
     "__clang_Interpreter_SetValueNoAlloc",
     "__clang_Interpreter_SetValueWithAlloc",
@@ -449,15 +500,15 @@ namespace {
 
 class RuntimeInterfaceBuilder
     : public TypeVisitor<RuntimeInterfaceBuilder, Interpreter::InterfaceKind> {
-  clang::Interpreter &Interp;
+  clang::caas::Interpreter &Interp;
   ASTContext &Ctx;
   Sema &S;
   Expr *E;
   llvm::SmallVector<Expr *, 3> Args;
 
 public:
-  RuntimeInterfaceBuilder(clang::Interpreter &In, ASTContext &C, Sema &SemaRef,
-                          Expr *VE, ArrayRef<Expr *> FixedArgs)
+  RuntimeInterfaceBuilder(clang::caas::Interpreter &In, ASTContext &C,
+                          Sema &SemaRef, Expr *VE, ArrayRef<Expr *> FixedArgs)
       : Interp(In), Ctx(C), S(SemaRef), E(VE) {
     // The Interpreter* parameter and the out parameter `OutVal`.
     for (Expr *E : FixedArgs)
