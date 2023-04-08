@@ -4965,3 +4965,447 @@ define i1 @or_positive_sgt_zero_multi_use(i8 %a) {
   %cmp = icmp sgt i8 %b, 0
   ret i1 %cmp
 }
+
+define i1 @mul_mul_sge_zero(i8 %a, i8 %b) {
+; CHECK-LABEL: @mul_mul_sge_zero(
+; CHECK-NEXT:    [[MUL:%.*]] = mul nsw i8 [[A:%.*]], 42
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw i8 [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i8 [[MUL2]], -1
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %mul = mul nsw i8 %a, 42
+  %mul2 = mul nsw i8 %b, %mul
+  %cmp = icmp sge i8 %mul2, 0
+  ret i1 %cmp
+}
+
+define <2 x i1> @mul_mul_sge_zero_vec(<2 x i8> %a, <2 x i8> %b) {
+; CHECK-LABEL: @mul_mul_sge_zero_vec(
+; CHECK-NEXT:    [[MUL:%.*]] = mul nsw <2 x i8> [[A:%.*]], <i8 42, i8 42>
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw <2 x i8> [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt <2 x i8> [[MUL2]], <i8 -1, i8 -1>
+; CHECK-NEXT:    ret <2 x i1> [[CMP]]
+;
+  %mul = mul nsw <2 x i8> %a, <i8 42, i8 42>
+  %mul2 = mul nsw <2 x i8> %b, %mul
+  %cmp = icmp sge <2 x i8> %mul2, <i8 0, i8 0>
+  ret <2 x i1> %cmp
+}
+
+define i1 @mul_mul_sge_one(i8 %a, i8 %b) {
+; CHECK-LABEL: @mul_mul_sge_one(
+; CHECK-NEXT:    [[MUL:%.*]] = mul nsw i8 [[A:%.*]], 42
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw i8 [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i8 [[MUL2]], 0
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %mul = mul nsw i8 %a, 42
+  %mul2 = mul nsw i8 %b, %mul
+  %cmp = icmp sge i8 %mul2, 1
+  ret i1 %cmp
+}
+
+define <2 x i1> @mul_mul_sge_one_vec(<2 x i8> %a, <2 x i8> %b) {
+; CHECK-LABEL: @mul_mul_sge_one_vec(
+; CHECK-NEXT:    [[MUL:%.*]] = mul nsw <2 x i8> [[A:%.*]], <i8 42, i8 42>
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw <2 x i8> [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt <2 x i8> [[MUL2]], zeroinitializer
+; CHECK-NEXT:    ret <2 x i1> [[CMP]]
+;
+  %mul = mul nsw <2 x i8> %a, <i8 42, i8 42>
+  %mul2 = mul nsw <2 x i8> %b, %mul
+  %cmp = icmp sge <2 x i8> %mul2, <i8 1, i8 1>
+  ret <2 x i1> %cmp
+}
+
+define i1 @mul_mul_slt_zero(i8 %a, i8 %b) {
+; CHECK-LABEL: @mul_mul_slt_zero(
+; CHECK-NEXT:    [[MUL:%.*]] = mul nsw i8 [[A:%.*]], 42
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw i8 [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i8 [[MUL2]], 0
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %mul = mul nsw i8 %a, 42
+  %mul2 = mul nsw i8 %b, %mul
+  %cmp = icmp slt i8 %mul2, 0
+  ret i1 %cmp
+}
+
+define <2 x i1> @mul_mul_slt_zero_vec(<2 x i8> %a, <2 x i8> %b) {
+; CHECK-LABEL: @mul_mul_slt_zero_vec(
+; CHECK-NEXT:    [[MUL:%.*]] = mul nsw <2 x i8> [[A:%.*]], <i8 42, i8 42>
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw <2 x i8> [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt <2 x i8> [[MUL2]], zeroinitializer
+; CHECK-NEXT:    ret <2 x i1> [[CMP]]
+;
+  %mul = mul nsw <2 x i8> %a, <i8 42, i8 42>
+  %mul2 = mul nsw <2 x i8> %b, %mul
+  %cmp = icmp slt <2 x i8> %mul2, <i8 0, i8 0>
+  ret <2 x i1> %cmp
+}
+
+define i1 @mul_mul_slt_one(i8 %a, i8 %b) {
+; CHECK-LABEL: @mul_mul_slt_one(
+; CHECK-NEXT:    [[MUL:%.*]] = mul nsw i8 [[A:%.*]], 42
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw i8 [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i8 [[MUL2]], 1
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %mul = mul nsw i8 %a, 42
+  %mul2 = mul nsw i8 %b, %mul
+  %cmp = icmp slt i8 %mul2, 1
+  ret i1 %cmp
+}
+
+define <2 x i1> @mul_mul_slt_one_vec(<2 x i8> %a, <2 x i8> %b) {
+; CHECK-LABEL: @mul_mul_slt_one_vec(
+; CHECK-NEXT:    [[MUL:%.*]] = mul nsw <2 x i8> [[A:%.*]], <i8 42, i8 42>
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw <2 x i8> [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt <2 x i8> [[MUL2]], <i8 1, i8 1>
+; CHECK-NEXT:    ret <2 x i1> [[CMP]]
+;
+  %mul = mul nsw <2 x i8> %a, <i8 42, i8 42>
+  %mul2 = mul nsw <2 x i8> %b, %mul
+  %cmp = icmp slt <2 x i8> %mul2, <i8 1, i8 1>
+  ret <2 x i1> %cmp
+}
+
+define i1 @mul_mul_sle_zero(i8 %a, i8 %b) {
+; CHECK-LABEL: @mul_mul_sle_zero(
+; CHECK-NEXT:    [[MUL:%.*]] = mul nsw i8 [[A:%.*]], 42
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw i8 [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i8 [[MUL2]], 1
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %mul = mul nsw i8 %a, 42
+  %mul2 = mul nsw i8 %b, %mul
+  %cmp = icmp sle i8 %mul2, 0
+  ret i1 %cmp
+}
+
+define <2 x i1> @mul_mul_sle_zero_vec(<2 x i8> %a, <2 x i8> %b) {
+; CHECK-LABEL: @mul_mul_sle_zero_vec(
+; CHECK-NEXT:    [[MUL:%.*]] = mul nsw <2 x i8> [[A:%.*]], <i8 42, i8 42>
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw <2 x i8> [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt <2 x i8> [[MUL2]], <i8 1, i8 1>
+; CHECK-NEXT:    ret <2 x i1> [[CMP]]
+;
+  %mul = mul nsw <2 x i8> %a, <i8 42, i8 42>
+  %mul2 = mul nsw <2 x i8> %b, %mul
+  %cmp = icmp sle <2 x i8> %mul2, <i8 0, i8 0>
+  ret <2 x i1> %cmp
+}
+
+define i1 @mul_mul_sle_negone(i8 %a, i8 %b) {
+; CHECK-LABEL: @mul_mul_sle_negone(
+; CHECK-NEXT:    [[MUL:%.*]] = mul nsw i8 [[A:%.*]], 42
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw i8 [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i8 [[MUL2]], 0
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %mul = mul nsw i8 %a, 42
+  %mul2 = mul nsw i8 %b, %mul
+  %cmp = icmp sle i8 %mul2, -1
+  ret i1 %cmp
+}
+
+define <2 x i1> @mul_mul_sle_negone_vec(<2 x i8> %a, <2 x i8> %b) {
+; CHECK-LABEL: @mul_mul_sle_negone_vec(
+; CHECK-NEXT:    [[MUL:%.*]] = mul nsw <2 x i8> [[A:%.*]], <i8 42, i8 42>
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw <2 x i8> [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt <2 x i8> [[MUL2]], zeroinitializer
+; CHECK-NEXT:    ret <2 x i1> [[CMP]]
+;
+  %mul = mul nsw <2 x i8> %a, <i8 42, i8 42>
+  %mul2 = mul nsw <2 x i8> %b, %mul
+  %cmp = icmp sle <2 x i8> %mul2, <i8 -1, i8 -1>
+  ret <2 x i1> %cmp
+}
+
+define i1 @mul_mul_sgt_zero(i8 %a, i8 %b) {
+; CHECK-LABEL: @mul_mul_sgt_zero(
+; CHECK-NEXT:    [[MUL:%.*]] = mul nsw i8 [[A:%.*]], 42
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw i8 [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i8 [[MUL2]], 0
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %mul = mul nsw i8 %a, 42
+  %mul2 = mul nsw i8 %b, %mul
+  %cmp = icmp sgt i8 %mul2, 0
+  ret i1 %cmp
+}
+
+define <2 x i1> @mul_mul_sgt_zero_vec(<2 x i8> %a, <2 x i8> %b) {
+; CHECK-LABEL: @mul_mul_sgt_zero_vec(
+; CHECK-NEXT:    [[MUL:%.*]] = mul nsw <2 x i8> [[A:%.*]], <i8 42, i8 42>
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw <2 x i8> [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt <2 x i8> [[MUL2]], zeroinitializer
+; CHECK-NEXT:    ret <2 x i1> [[CMP]]
+;
+  %mul = mul nsw <2 x i8> %a, <i8 42, i8 42>
+  %mul2 = mul nsw <2 x i8> %b, %mul
+  %cmp = icmp sgt <2 x i8> %mul2, <i8 0, i8 0>
+  ret <2 x i1> %cmp
+}
+
+define i1 @mul_mul_sgt_negone(i8 %a, i8 %b) {
+; CHECK-LABEL: @mul_mul_sgt_negone(
+; CHECK-NEXT:    [[MUL:%.*]] = mul nsw i8 [[A:%.*]], 42
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw i8 [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i8 [[MUL2]], -1
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %mul = mul nsw i8 %a, 42
+  %mul2 = mul nsw i8 %b, %mul
+  %cmp = icmp sgt i8 %mul2, -1
+  ret i1 %cmp
+}
+
+define <2 x i1> @mul_mul_sgt_negone_vec(<2 x i8> %a, <2 x i8> %b) {
+; CHECK-LABEL: @mul_mul_sgt_negone_vec(
+; CHECK-NEXT:    [[MUL:%.*]] = mul nsw <2 x i8> [[A:%.*]], <i8 42, i8 42>
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw <2 x i8> [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt <2 x i8> [[MUL2]], <i8 -1, i8 -1>
+; CHECK-NEXT:    ret <2 x i1> [[CMP]]
+;
+  %mul = mul nsw <2 x i8> %a, <i8 42, i8 42>
+  %mul2 = mul nsw <2 x i8> %b, %mul
+  %cmp = icmp sgt <2 x i8> %mul2, <i8 -1, i8 -1>
+  ret <2 x i1> %cmp
+}
+
+define i1 @shl_mul_sge_zero(i8 %a, i8 %b) {
+; CHECK-LABEL: @shl_mul_sge_zero(
+; CHECK-NEXT:    [[MUL:%.*]] = shl nsw i8 [[A:%.*]], 1
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw i8 [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i8 [[MUL2]], -1
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %mul = shl nsw i8 %a, 1
+  %mul2 = mul nsw i8 %b, %mul
+  %cmp = icmp sge i8 %mul2, 0
+  ret i1 %cmp
+}
+
+define <2 x i1> @shl_mul_sge_zero_vec(<2 x i8> %a, <2 x i8> %b) {
+; CHECK-LABEL: @shl_mul_sge_zero_vec(
+; CHECK-NEXT:    [[MUL:%.*]] = shl nsw <2 x i8> [[A:%.*]], <i8 1, i8 1>
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw <2 x i8> [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt <2 x i8> [[MUL2]], <i8 -1, i8 -1>
+; CHECK-NEXT:    ret <2 x i1> [[CMP]]
+;
+  %mul = shl nsw <2 x i8> %a, <i8 1, i8 1>
+  %mul2 = mul nsw <2 x i8> %b, %mul
+  %cmp = icmp sge <2 x i8> %mul2, <i8 0, i8 0>
+  ret <2 x i1> %cmp
+}
+
+define i1 @shl_mul_sge_one(i8 %a, i8 %b) {
+; CHECK-LABEL: @shl_mul_sge_one(
+; CHECK-NEXT:    [[MUL:%.*]] = shl nsw i8 [[A:%.*]], 1
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw i8 [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i8 [[MUL2]], 0
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %mul = shl nsw i8 %a, 1
+  %mul2 = mul nsw i8 %b, %mul
+  %cmp = icmp sge i8 %mul2, 1
+  ret i1 %cmp
+}
+
+define <2 x i1> @shl_mul_sge_one_vec(<2 x i8> %a, <2 x i8> %b) {
+; CHECK-LABEL: @shl_mul_sge_one_vec(
+; CHECK-NEXT:    [[MUL:%.*]] = shl nsw <2 x i8> [[A:%.*]], <i8 1, i8 1>
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw <2 x i8> [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt <2 x i8> [[MUL2]], zeroinitializer
+; CHECK-NEXT:    ret <2 x i1> [[CMP]]
+;
+  %mul = shl nsw <2 x i8> %a, <i8 1, i8 1>
+  %mul2 = mul nsw <2 x i8> %b, %mul
+  %cmp = icmp sge <2 x i8> %mul2, <i8 1, i8 1>
+  ret <2 x i1> %cmp
+}
+
+define i1 @shl_mul_slt_zero(i8 %a, i8 %b) {
+; CHECK-LABEL: @shl_mul_slt_zero(
+; CHECK-NEXT:    [[MUL:%.*]] = shl nsw i8 [[A:%.*]], 1
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw i8 [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i8 [[MUL2]], 0
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %mul = shl nsw i8 %a, 1
+  %mul2 = mul nsw i8 %b, %mul
+  %cmp = icmp slt i8 %mul2, 0
+  ret i1 %cmp
+}
+
+define <2 x i1> @shl_mul_slt_zero_vec(<2 x i8> %a, <2 x i8> %b) {
+; CHECK-LABEL: @shl_mul_slt_zero_vec(
+; CHECK-NEXT:    [[MUL:%.*]] = shl nsw <2 x i8> [[A:%.*]], <i8 1, i8 1>
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw <2 x i8> [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt <2 x i8> [[MUL2]], zeroinitializer
+; CHECK-NEXT:    ret <2 x i1> [[CMP]]
+;
+  %mul = shl nsw <2 x i8> %a, <i8 1, i8 1>
+  %mul2 = mul nsw <2 x i8> %b, %mul
+  %cmp = icmp slt <2 x i8> %mul2, <i8 0, i8 0>
+  ret <2 x i1> %cmp
+}
+
+define i1 @shl_mul_slt_one(i8 %a, i8 %b) {
+; CHECK-LABEL: @shl_mul_slt_one(
+; CHECK-NEXT:    [[MUL:%.*]] = shl nsw i8 [[A:%.*]], 1
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw i8 [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i8 [[MUL2]], 1
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %mul = shl nsw i8 %a, 1
+  %mul2 = mul nsw i8 %b, %mul
+  %cmp = icmp slt i8 %mul2, 1
+  ret i1 %cmp
+}
+
+define <2 x i1> @shl_mul_slt_one_vec(<2 x i8> %a, <2 x i8> %b) {
+; CHECK-LABEL: @shl_mul_slt_one_vec(
+; CHECK-NEXT:    [[MUL:%.*]] = shl nsw <2 x i8> [[A:%.*]], <i8 1, i8 1>
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw <2 x i8> [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt <2 x i8> [[MUL2]], <i8 1, i8 1>
+; CHECK-NEXT:    ret <2 x i1> [[CMP]]
+;
+  %mul = shl nsw <2 x i8> %a, <i8 1, i8 1>
+  %mul2 = mul nsw <2 x i8> %b, %mul
+  %cmp = icmp slt <2 x i8> %mul2, <i8 1, i8 1>
+  ret <2 x i1> %cmp
+}
+
+define i1 @shl_mul_sle_zero(i8 %a, i8 %b) {
+; CHECK-LABEL: @shl_mul_sle_zero(
+; CHECK-NEXT:    [[MUL:%.*]] = shl nsw i8 [[A:%.*]], 1
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw i8 [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i8 [[MUL2]], 1
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %mul = shl nsw i8 %a, 1
+  %mul2 = mul nsw i8 %b, %mul
+  %cmp = icmp sle i8 %mul2, 0
+  ret i1 %cmp
+}
+
+define <2 x i1> @shl_mul_sle_zero_vec(<2 x i8> %a, <2 x i8> %b) {
+; CHECK-LABEL: @shl_mul_sle_zero_vec(
+; CHECK-NEXT:    [[MUL:%.*]] = shl nsw <2 x i8> [[A:%.*]], <i8 1, i8 1>
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw <2 x i8> [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt <2 x i8> [[MUL2]], <i8 1, i8 1>
+; CHECK-NEXT:    ret <2 x i1> [[CMP]]
+;
+  %mul = shl nsw <2 x i8> %a, <i8 1, i8 1>
+  %mul2 = mul nsw <2 x i8> %b, %mul
+  %cmp = icmp sle <2 x i8> %mul2, <i8 0, i8 0>
+  ret <2 x i1> %cmp
+}
+
+define i1 @shl_mul_sle_negone(i8 %a, i8 %b) {
+; CHECK-LABEL: @shl_mul_sle_negone(
+; CHECK-NEXT:    [[MUL:%.*]] = shl nsw i8 [[A:%.*]], 1
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw i8 [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt i8 [[MUL2]], 0
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %mul = shl nsw i8 %a, 1
+  %mul2 = mul nsw i8 %b, %mul
+  %cmp = icmp sle i8 %mul2, -1
+  ret i1 %cmp
+}
+
+define <2 x i1> @shl_mul_sle_negone_vec(<2 x i8> %a, <2 x i8> %b) {
+; CHECK-LABEL: @shl_mul_sle_negone_vec(
+; CHECK-NEXT:    [[MUL:%.*]] = shl nsw <2 x i8> [[A:%.*]], <i8 1, i8 1>
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw <2 x i8> [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp slt <2 x i8> [[MUL2]], zeroinitializer
+; CHECK-NEXT:    ret <2 x i1> [[CMP]]
+;
+  %mul = shl nsw <2 x i8> %a, <i8 1, i8 1>
+  %mul2 = mul nsw <2 x i8> %b, %mul
+  %cmp = icmp sle <2 x i8> %mul2, <i8 -1, i8 -1>
+  ret <2 x i1> %cmp
+}
+
+define i1 @shl_mul_sgt_zero(i8 %a, i8 %b) {
+; CHECK-LABEL: @shl_mul_sgt_zero(
+; CHECK-NEXT:    [[MUL:%.*]] = shl nsw i8 [[A:%.*]], 1
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw i8 [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i8 [[MUL2]], 0
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %mul = shl nsw i8 %a, 1
+  %mul2 = mul nsw i8 %b, %mul
+  %cmp = icmp sgt i8 %mul2, 0
+  ret i1 %cmp
+}
+
+define <2 x i1> @shl_mul_sgt_zero_vec(<2 x i8> %a, <2 x i8> %b) {
+; CHECK-LABEL: @shl_mul_sgt_zero_vec(
+; CHECK-NEXT:    [[MUL:%.*]] = shl nsw <2 x i8> [[A:%.*]], <i8 1, i8 1>
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw <2 x i8> [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt <2 x i8> [[MUL2]], zeroinitializer
+; CHECK-NEXT:    ret <2 x i1> [[CMP]]
+;
+  %mul = shl nsw <2 x i8> %a, <i8 1, i8 1>
+  %mul2 = mul nsw <2 x i8> %b, %mul
+  %cmp = icmp sgt <2 x i8> %mul2, <i8 0, i8 0>
+  ret <2 x i1> %cmp
+}
+
+define i1 @shl_mul_sgt_negone(i8 %a, i8 %b) {
+; CHECK-LABEL: @shl_mul_sgt_negone(
+; CHECK-NEXT:    [[MUL:%.*]] = shl nsw i8 [[A:%.*]], 1
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw i8 [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i8 [[MUL2]], -1
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %mul = shl nsw i8 %a, 1
+  %mul2 = mul nsw i8 %b, %mul
+  %cmp = icmp sgt i8 %mul2, -1
+  ret i1 %cmp
+}
+
+define <2 x i1> @shl_mul_sgt_negone_vec(<2 x i8> %a, <2 x i8> %b) {
+; CHECK-LABEL: @shl_mul_sgt_negone_vec(
+; CHECK-NEXT:    [[MUL:%.*]] = shl nsw <2 x i8> [[A:%.*]], <i8 1, i8 1>
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw <2 x i8> [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt <2 x i8> [[MUL2]], <i8 -1, i8 -1>
+; CHECK-NEXT:    ret <2 x i1> [[CMP]]
+;
+  %mul = shl nsw <2 x i8> %a, <i8 1, i8 1>
+  %mul2 = mul nsw <2 x i8> %b, %mul
+  %cmp = icmp sgt <2 x i8> %mul2, <i8 -1, i8 -1>
+  ret <2 x i1> %cmp
+}
+
+define i1 @mul_mul_sge_zero_multiuse(i8 %a, i8 %b) {
+; CHECK-LABEL: @mul_mul_sge_zero_multiuse(
+; CHECK-NEXT:    [[MUL:%.*]] = mul nsw i8 [[A:%.*]], 42
+; CHECK-NEXT:    [[MUL2:%.*]] = mul nsw i8 [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    call void @use_i8(i8 [[MUL2]])
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i8 [[MUL2]], -1
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %mul = mul nsw i8 %a, 42
+  %mul2 = mul nsw i8 %b, %mul
+  call void @use_i8(i8 %mul2)
+  %cmp = icmp sge i8 %mul2, 0
+  ret i1 %cmp
+}
+
+define i1 @mul_mul_sge_zero_nonsw(i8 %a, i8 %b) {
+; CHECK-LABEL: @mul_mul_sge_zero_nonsw(
+; CHECK-NEXT:    [[MUL:%.*]] = mul i8 [[A:%.*]], 42
+; CHECK-NEXT:    [[MUL2:%.*]] = mul i8 [[MUL]], [[B:%.*]]
+; CHECK-NEXT:    [[CMP:%.*]] = icmp sgt i8 [[MUL2]], -1
+; CHECK-NEXT:    ret i1 [[CMP]]
+;
+  %mul = mul i8 %a, 42
+  %mul2 = mul i8 %b, %mul
+  %cmp = icmp sge i8 %mul2, 0
+  ret i1 %cmp
+}
