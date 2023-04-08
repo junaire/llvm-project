@@ -2040,6 +2040,49 @@ Instruction *InstCombinerImpl::foldICmpOrConstant(ICmpInst &Cmp,
   return nullptr;
 }
 
+// Reassociate (C * X) * Y to (X * Y) * C to enable further
+// optimizations.
+static Value *tryReassociateMulConstant(ICmpInst::Predicate Pred,
+                                        BinaryOperator *Mul,
+                                        InstCombiner::BuilderTy &Builder) {
+  BinaryOperator *Inner;
+  Value *X, *Y;
+  const APInt *C;
+
+  auto Reassociate = [&](Value *X, Value *Y, const APInt &InnerC,
+                         Constant *CI) -> Value * {
+    Value *NewInner = Builder.CreateMul(X, Y);
+    Value *NewMul = Builder.CreateMul(NewInner, CI);
+
+    if (Mul->hasNoUnsignedWrap() && Inner->hasNoUnsignedWrap() &&
+        !InnerC.isZero()) {
+      cast<BinaryOperator>(NewInner)->setHasNoUnsignedWrap();
+      cast<BinaryOperator>(NewMul)->setHasNoUnsignedWrap();
+      return NewMul;
+    }
+    if (Mul->hasNoSignedWrap() && Inner->hasNoSignedWrap() &&
+        InnerC.isStrictlyPositive()) {
+      cast<BinaryOperator>(NewInner)->setHasNoSignedWrap();
+      cast<BinaryOperator>(NewMul)->setHasNoSignedWrap();
+      return NewMul;
+    }
+    return NewMul;
+  };
+
+  if (match(Mul, m_OneUse(m_c_Mul(m_BinOp(Inner), m_Value(Y))))) {
+
+    if (match(Inner, m_Mul(m_Value(X), m_APInt(C))))
+      return Reassociate(X, Y, *C, ConstantInt::get(Mul->getType(), *C));
+
+    // X * Power_of_N will be fold to X << N, recognize the pattern.
+    if (match(Inner, m_Shl(m_Value(X), m_APInt(C))))
+      return Reassociate(
+          X, Y, *C,
+          ConstantInt::get(Mul->getType(), APInt(C->getBitWidth(), 1).shl(*C)));
+  }
+  return nullptr;
+}
+
 /// Fold icmp (mul X, Y), C.
 Instruction *InstCombinerImpl::foldICmpMulConstant(ICmpInst &Cmp,
                                                    BinaryOperator *Mul,
@@ -2054,6 +2097,9 @@ Instruction *InstCombinerImpl::foldICmpMulConstant(ICmpInst &Cmp,
   if (Cmp.isEquality() && C.isZero() && X == Mul->getOperand(1) &&
       (Mul->hasNoUnsignedWrap() || Mul->hasNoSignedWrap()))
     return new ICmpInst(Pred, X, ConstantInt::getNullValue(MulTy));
+
+  if (Value *NewMul = tryReassociateMulConstant(Pred, Mul, Builder))
+    return new ICmpInst(Pred, NewMul, ConstantInt::get(Mul->getType(), C));
 
   const APInt *MulC;
   if (!match(Mul->getOperand(1), m_APInt(MulC)))
