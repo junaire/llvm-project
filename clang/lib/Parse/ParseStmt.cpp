@@ -20,6 +20,7 @@
 #include "clang/Parse/RAIIObjectsForParser.h"
 #include "clang/Sema/DeclSpec.h"
 #include "clang/Sema/EnterExpressionEvaluationContext.h"
+#include "clang/Sema/Lookup.h"
 #include "clang/Sema/Scope.h"
 #include "clang/Sema/TypoCorrection.h"
 #include "llvm/ADT/STLExtras.h"
@@ -1130,6 +1131,47 @@ StmtResult Parser::handleExprStmt(ExprResult E, ParsedStmtContext StmtCtx) {
   return Actions.ActOnExprStmt(E, /*DiscardedValue=*/!IsStmtExprResult);
 }
 
+static Stmt *SynthesizeIfStmt(Sema &S, VarDecl *Origin) {
+  ASTContext &Ctx = S.getASTContext();
+  IfStatementKind Kind = IfStatementKind::Ordinary;
+  SourceLocation Loc{};
+  auto LookupInterface = [&](Expr *&Interface, llvm::StringRef Name) {
+    LookupResult R(S, &Ctx.Idents.get(Name), SourceLocation(),
+                   Sema::LookupOrdinaryName, Sema::ForVisibleRedeclaration);
+    S.LookupQualifiedName(R, Ctx.getTranslationUnitDecl());
+    if (R.empty())
+      return false;
+
+    CXXScopeSpec CSS;
+    Interface = S.BuildDeclarationNameExpr(CSS, R, /*ADL=*/false).get();
+    return true;
+  };
+  Expr *HasValueCall = nullptr;
+  Expr *ReturnNullCall = nullptr;
+  if (!LookupInterface(HasValueCall, "__RustQuestionOp_HasValue"))
+    llvm_unreachable("Can not find has_value wrapped call");
+  if (!LookupInterface(ReturnNullCall, "__RustQuestionOp_ReturnNull"))
+    llvm_unreachable("Can not find return_null wrapped call");
+
+  Expr *DRE = S.BuildDeclRefExpr(Origin, Origin->getType(), VK_LValue, Loc);
+  assert(DRE != nullptr);
+  llvm::SmallVector<Expr *, 1> Arg = {DRE};
+  ExprResult ER =
+      S.ActOnCallExpr(/*Scope=*/nullptr, HasValueCall, Loc, Arg, Loc);
+  assert(!ER.isInvalid());
+  Sema::ConditionResult Cond =
+      S.ActOnCondition(nullptr, Loc, ER.get(), Sema::ConditionKind::Boolean);
+  ExprResult ThenCall =
+      S.ActOnCallExpr(/*Scope=*/nullptr, ReturnNullCall, Loc, Arg, Loc);
+  assert(!ThenCall.isInvalid());
+  StmtResult Then = S.BuildReturnStmt(Loc, ThenCall.get());
+  assert(!Then.isInvalid());
+  StmtResult SR = S.ActOnIfStmt(Loc, Kind, Loc, nullptr, Cond, Loc, Then.get(),
+                                Loc, nullptr);
+  assert(!SR.isInvalid());
+  return SR.get();
+}
+
 /// ParseCompoundStatementBody - Parse a sequence of statements optionally
 /// followed by a label and invoke the ActOnCompoundStmt action.  This expects
 /// the '{' to be the current token, and consume the '}' at the end of the
@@ -1203,6 +1245,15 @@ StmtResult Parser::ParseCompoundStatementBody(bool isStmtExpr) {
     StmtResult R;
     if (Tok.isNot(tok::kw___extension__)) {
       R = ParseStatementOrDeclaration(Stmts, SubStmtCtx);
+      if (auto *DS = dyn_cast<DeclStmt>(R.get()); DS && DS->isSingleDecl()) {
+        if (auto *DD = dyn_cast<VarDecl>(DS->getSingleDecl());
+            DD && DD->HasRustQuestionOp) {
+          DD->HasRustQuestionOp = false;
+          if (R.isUsable())
+            Stmts.push_back(R.get());
+          R = SynthesizeIfStmt(Actions, DD);
+        }
+      }
     } else {
       // __extension__ can start declarations and it can also be a unary
       // operator for expressions.  Consume multiple __extension__ markers here

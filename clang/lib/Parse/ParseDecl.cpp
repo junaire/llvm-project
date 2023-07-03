@@ -2331,6 +2331,11 @@ Parser::DeclGroupPtrTy Parser::ParseDeclGroup(ParsingDeclSpec &DS,
       SkipMalformedDecl();
   }
 
+  if (TryConsumeToken(tok::question) && DeclsInGroup.size() == 1)
+    if (auto *DD = dyn_cast<VarDecl>(DeclsInGroup[0]))
+      if (isa<AutoType>(DD->getType()))
+        DD->HasRustQuestionOp = true;
+
   return Actions.FinalizeDeclaratorGroup(getCurScope(), DS, DeclsInGroup);
 }
 

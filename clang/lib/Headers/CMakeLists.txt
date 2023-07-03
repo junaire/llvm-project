@@ -19,6 +19,7 @@ set(core_files
   tgmath.h
   unwind.h
   varargs.h
+  __rust_question_op_runtime.h
   )
 
 set(arm_common_files

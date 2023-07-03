@@ -1405,6 +1405,8 @@ void clang::InitializePreprocessor(
     AddImplicitInclude(Builder, Path);
   }
 
+  AddImplicitInclude(Builder, "__rust_question_op_runtime.h");
+
   // Instruct the preprocessor to skip the preamble.
   PP.setSkipMainFilePreamble(InitOpts.PrecompiledPreambleBytes.first,
                              InitOpts.PrecompiledPreambleBytes.second);
